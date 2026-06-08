@@ -1,45 +1,37 @@
 /*
  * atendimento.c
- *
- * TAD (Tipo Abstrato de Dados) base do sistema.
- * Responsável por:
- *   - Manter o contador global de IDs e gerar o próximo ID único
- *   - Converter o número de prioridade (1, 2, 3) para texto legível
- *   - Imprimir o cabeçalho da tabela de atendimentos no terminal
- *   - Imprimir uma linha formatada com os dados de um atendimento
- *
- * Todos os outros módulos dependem deste arquivo para exibir atendimentos.
+ * Funções base usadas por todos os outros módulos.
  */
 
 #include <stdio.h>
-#include <string.h>
 #include "atendimento.h"
 
-/* Variável estática: cada chamada a proximo_id() retorna um valor incrementado */
+/* Contador global de IDs — começa em 1 e nunca reinicia */
 static int contador_id = 1;
 
+/* Retorna o próximo ID disponível */
 int proximo_id(void) {
-    /* Retorna o próximo ID disponível e incrementa o contador interno */
+    return contador_id++;
 }
 
+/* Converte o número de prioridade para texto */
 const char *prioridade_label(int p) {
-    /* Converte o inteiro de prioridade para string:
-     *   1 -> "Baixa"
-     *   2 -> "Media"
-     *   3 -> "Alta"
-     *   outro -> "Desconhecida"
-     */
+    if (p == 1) return "Baixa";
+    if (p == 2) return "Media";
+    if (p == 3) return "Alta";
+    return "?";
 }
 
+/* Imprime o cabeçalho da tabela */
 void imprimir_cabecalho(void) {
-    /* Imprime no terminal o cabeçalho das colunas da tabela:
-     *   ID | Cliente | Categoria | Prioridade | Tempo(min) | Status
-     * e uma linha separadora abaixo
-     */
+    printf("%-4s %-20s %-15s %-10s %-10s %-10s\n",
+           "ID", "Cliente", "Categoria", "Prioridade", "Tempo", "Status");
+    printf("---- -------------------- --------------- ---------- ---------- ----------\n");
 }
 
+/* Imprime uma linha com os dados de um atendimento */
 void imprimir_atendimento(const Atendimento *a) {
-    /* Imprime uma linha formatada com todos os campos do atendimento:
-     *   id, cliente, categoria, prioridade_label(), tempo_estimado, status
-     */
+    printf("%-4d %-20s %-15s %-10s %-10d %-10s\n",
+           a->id, a->cliente, a->categoria,
+           prioridade_label(a->prioridade), a->tempo_estimado, a->status);
 }

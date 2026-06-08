@@ -1,112 +1,148 @@
 /*
  * arvore.c
+ * Árvore Binária de Busca (BST) organizada pelo ID do atendimento.
  *
- * Implementação da Árvore Binária de Busca (BST — Binary Search Tree).
- * Usada para realizar buscas por ID em O(log n) no caso médio, ao contrário
- * da busca sequencial na lista que sempre percorre O(n) nós.
+ * Por que usar árvore para buscar por ID?
+ *   Na lista, buscar um ID exige olhar nó por nó até encontrar (lento).
+ *   Na árvore, a cada passo eliminamos metade dos nós restantes,
+ *   chegando ao resultado muito mais rápido.
  *
- * Propriedade da BST:
- *   - Todo nó à ESQUERDA tem ID menor que o nó atual
- *   - Todo nó à DIREITA tem ID maior que o nó atual
- *   - IDs são únicos, portanto não há duplicatas
- *
- * Funções:
- *   arvore_init           - Inicializa a árvore com raiz = NULL
- *   arvore_inserir        - Insere um atendimento na posição correta da BST
- *   arvore_buscar         - Navega pela árvore comparando IDs até encontrar
- *                           o nó ou chegar em NULL (não encontrado)
- *   arvore_listar_em_ordem- Percurso em-ordem (esquerda → raiz → direita)
- *                           que imprime os atendimentos ordenados por ID
- *   arvore_remover        - Remove um nó pelo ID tratando os 3 casos:
- *                             1. Nó sem filhos: remove diretamente
- *                             2. Nó com 1 filho: substitui pelo filho
- *                             3. Nó com 2 filhos: substitui pelo sucessor
- *                                em-ordem (menor nó da sub-árvore direita)
- *   arvore_destruir       - Percurso pós-ordem liberando todos os nós
- *
- * Todas as operações recursivas têm funções auxiliares estáticas (_rec).
+ * Regra da BST:
+ *   - IDs menores ficam à ESQUERDA
+ *   - IDs maiores ficam à DIREITA
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "arvore.h"
 
+/* Inicializa a árvore vazia */
 void arvore_init(Arvore *a) {
-    /* Define raiz = NULL */
+    a->raiz = NULL;
 }
 
-/* Aloca e retorna um novo NoArvore com esquerda = direita = NULL */
-static NoArvore *novo_no(Atendimento at) {
-    /* malloc de NoArvore, copia at, zera ponteiros filhos, retorna o nó */
+/* Cria e retorna um novo nó */
+static NoArvore *criar_no(Atendimento at) {
+    NoArvore *no = (NoArvore *)malloc(sizeof(NoArvore));
+    if (no == NULL) return NULL;
+    no->atendimento = at;
+    no->esquerda    = NULL;
+    no->direita     = NULL;
+    return no;
 }
 
-/* Recursão de inserção: desce à esquerda se id < nó atual, direita se id > nó atual */
-static NoArvore *inserir_rec(NoArvore *no, Atendimento at, int *ok) {
-    /* Caso base: nó NULL → cria novo nó aqui, marca *ok = 1
-     * ID menor  → vai para a sub-árvore esquerda
-     * ID maior  → vai para a sub-árvore direita
-     * ID igual  → ID duplicado, marca *ok = 0 (não insere)
-     */
+/* Função recursiva de inserção */
+static NoArvore *inserir_rec(NoArvore *no, Atendimento at) {
+    if (no == NULL) {
+        return criar_no(at); /* chegou no lugar certo, cria o nó */
+    }
+    if (at.id < no->atendimento.id) {
+        no->esquerda = inserir_rec(no->esquerda, at);
+    } else if (at.id > no->atendimento.id) {
+        no->direita = inserir_rec(no->direita, at);
+    }
+    /* se id == id, não insere (ID duplicado) */
+    return no;
 }
 
+/* Insere um atendimento na árvore */
 int arvore_inserir(Arvore *a, Atendimento at) {
-    /* Chama inserir_rec a partir da raiz e atualiza a->raiz com o retorno */
+    a->raiz = inserir_rec(a->raiz, at);
+    return 1;
 }
 
-/* Recursão de busca: compara id com o nó atual e desce na direção certa */
+/* Função recursiva de busca */
 static int buscar_rec(const NoArvore *no, int id, Atendimento *dest) {
-    /* Caso base: nó NULL → não encontrado, retorna 0
-     * ID igual  → copia atendimento para *dest, retorna 1
-     * ID menor  → busca na sub-árvore esquerda
-     * ID maior  → busca na sub-árvore direita
-     */
+    if (no == NULL) return 0; /* não encontrou */
+
+    if (id == no->atendimento.id) {
+        *dest = no->atendimento; /* encontrou! */
+        return 1;
+    }
+    if (id < no->atendimento.id) {
+        return buscar_rec(no->esquerda, id, dest);
+    }
+    return buscar_rec(no->direita, id, dest);
 }
 
+/* Busca um atendimento pelo ID */
 int arvore_buscar(const Arvore *a, int id, Atendimento *dest) {
-    /* Chama buscar_rec a partir da raiz */
+    return buscar_rec(a->raiz, id, dest);
 }
 
-/* Percurso em-ordem: esquerda → imprime → direita (resultado ordenado por ID) */
+/* Percurso em-ordem: imprime os nós em ordem crescente de ID */
 static void em_ordem_rec(const NoArvore *no) {
-    /* Caso base: nó NULL → retorna
-     * Recursão: em_ordem_rec(esquerda), imprimir_atendimento, em_ordem_rec(direita)
-     */
+    if (no == NULL) return;
+    em_ordem_rec(no->esquerda);
+    imprimir_atendimento(&no->atendimento);
+    em_ordem_rec(no->direita);
 }
 
 void arvore_listar_em_ordem(const Arvore *a) {
-    /* Se a árvore estiver vazia, imprime aviso e retorna.
-     * Caso contrário, imprime cabeçalho e chama em_ordem_rec(raiz)
-     */
+    if (a->raiz == NULL) {
+        printf("  Arvore vazia.\n");
+        return;
+    }
+    imprimir_cabecalho();
+    em_ordem_rec(a->raiz);
 }
 
-/* Retorna o nó com menor ID em uma sub-árvore (o mais à esquerda possível) */
-static NoArvore *minimo(NoArvore *no) {
-    /* Desce pelo campo esquerda enquanto não for NULL */
+/* Encontra o nó com menor ID em uma sub-árvore (o mais à esquerda) */
+static NoArvore *encontrar_minimo(NoArvore *no) {
+    while (no->esquerda != NULL) {
+        no = no->esquerda;
+    }
+    return no;
 }
 
-/* Recursão de remoção: localiza o nó pelo ID e trata os 3 casos */
-static NoArvore *remover_rec(NoArvore *no, int id, int *ok) {
-    /* Caso base: nó NULL → ID não existe, retorna NULL
-     * ID menor  → remove na sub-árvore esquerda
-     * ID maior  → remove na sub-árvore direita
-     * ID igual  → remoção:
-     *   - Sem filho esquerdo: retorna filho direito (ou NULL) e libera o nó
-     *   - Sem filho direito : retorna filho esquerdo e libera o nó
-     *   - Dois filhos       : encontra o sucessor em-ordem (minimo da direita),
-     *                         copia seu atendimento para o nó atual e remove
-     *                         o sucessor da sub-árvore direita
-     */
+/* Função recursiva de remoção */
+static NoArvore *remover_rec(NoArvore *no, int id, int *removeu) {
+    if (no == NULL) return NULL;
+
+    if (id < no->atendimento.id) {
+        no->esquerda = remover_rec(no->esquerda, id, removeu);
+    } else if (id > no->atendimento.id) {
+        no->direita  = remover_rec(no->direita,  id, removeu);
+    } else {
+        *removeu = 1;
+
+        if (no->esquerda == NULL) {
+            /* Caso 1: sem filho esquerdo */
+            NoArvore *tmp = no->direita;
+            free(no);
+            return tmp;
+        }
+        if (no->direita == NULL) {
+            /* Caso 2: sem filho direito */
+            NoArvore *tmp = no->esquerda;
+            free(no);
+            return tmp;
+        }
+        /* Caso 3: dois filhos — substitui pelo menor da sub-árvore direita */
+        NoArvore *suc = encontrar_minimo(no->direita);
+        no->atendimento = suc->atendimento;
+        no->direita = remover_rec(no->direita, suc->atendimento.id, removeu);
+    }
+    return no;
 }
 
+/* Remove um nó da árvore pelo ID */
 int arvore_remover(Arvore *a, int id) {
-    /* Chama remover_rec a partir da raiz e atualiza a->raiz com o retorno */
+    int removeu = 0;
+    a->raiz = remover_rec(a->raiz, id, &removeu);
+    return removeu;
 }
 
-/* Percurso pós-ordem para liberar toda a memória: filhos antes do pai */
+/* Função recursiva que libera memória (filhos antes do pai) */
 static void destruir_rec(NoArvore *no) {
-    /* destruir_rec(esquerda), destruir_rec(direita), free(no) */
+    if (no == NULL) return;
+    destruir_rec(no->esquerda);
+    destruir_rec(no->direita);
+    free(no);
 }
 
+/* Libera toda a memória da árvore */
 void arvore_destruir(Arvore *a) {
-    /* Chama destruir_rec(raiz) e define raiz = NULL */
+    destruir_rec(a->raiz);
+    a->raiz = NULL;
 }

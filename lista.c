@@ -1,25 +1,8 @@
 /*
  * lista.c
- *
- * Implementação da lista encadeada simples usada como HISTÓRICO de atendimentos.
- * Diferente da fila (que controla a ordem de espera), a lista guarda TODOS os
- * atendimentos já cadastrados — inclusive os já atendidos e cancelados.
- * Inserção é feita no início da lista (O(1)).
- *
- * Funções:
- *   lista_init             - Inicializa a lista vazia (cabeca = NULL, tamanho = 0)
- *   lista_inserir          - Aloca novo nó e o insere no início da lista
- *   lista_listar           - Percorre e imprime todos os atendimentos do histórico
- *   lista_buscar_nome      - Busca sequencial por trecho do nome do cliente (strstr)
- *                            Imprime todos os registros que contêm o texto buscado
- *   lista_buscar_prioridade- Busca sequencial: imprime todos com a prioridade dada
- *   lista_cancelar         - Percorre a lista até encontrar o ID e altera o status
- *                            para "cancelado" (bloqueia se já estiver "atendido")
- *   lista_atualizar_status - Percorre a lista e altera o status do atendimento com
- *                            o ID informado para o novo valor recebido
- *   lista_destruir         - Libera todos os nós alocados dinamicamente
- *   lista_copiar_array     - Copia até `max` atendimentos da lista para um vetor,
- *                            necessário para as funções de ordenação
+ * Lista encadeada simples usada como histórico de atendimentos.
+ * Guarda TODOS os atendimentos cadastrados (abertos, atendidos e cancelados).
+ * Inserção sempre no início da lista (operação rápida).
  */
 
 #include <stdio.h>
@@ -27,67 +10,135 @@
 #include <string.h>
 #include "lista.h"
 
+/* Inicializa a lista vazia */
 void lista_init(Lista *l) {
-    /* Define cabeca = NULL e tamanho = 0 */
+    l->cabeca  = NULL;
+    l->tamanho = 0;
 }
 
+/* Insere um atendimento no início da lista */
 int lista_inserir(Lista *l, Atendimento a) {
-    /* 1. Aloca um NoLista com malloc
-     * 2. Copia o atendimento para o novo nó
-     * 3. Encadeia o novo nó no início: novo->proximo = cabeca; cabeca = novo
-     * 4. Incrementa tamanho
-     * 5. Retorna 1 em sucesso ou 0 se malloc falhou
-     */
+    NoLista *novo = (NoLista *)malloc(sizeof(NoLista));
+    if (novo == NULL) return 0;
+
+    novo->atendimento = a;
+    novo->proximo     = l->cabeca; /* o novo nó aponta para o antigo início */
+    l->cabeca         = novo;      /* o início agora é o novo nó */
+    l->tamanho++;
+    return 1;
 }
 
+/* Imprime todos os atendimentos do histórico */
 void lista_listar(const Lista *l) {
-    /* 1. Se a lista estiver vazia, imprime "Historico vazio." e retorna
-     * 2. Imprime o cabeçalho com imprimir_cabecalho()
-     * 3. Percorre todos os nós e chama imprimir_atendimento() em cada um
-     * 4. Imprime o total de registros ao final
-     */
+    if (l->cabeca == NULL) {
+        printf("  Historico vazio.\n");
+        return;
+    }
+
+    imprimir_cabecalho();
+    NoLista *atual = l->cabeca;
+    while (atual != NULL) {
+        imprimir_atendimento(&atual->atendimento);
+        atual = atual->proximo;
+    }
+    printf("  Total: %d atendimento(s)\n", l->tamanho);
 }
 
+/* Busca por trecho do nome do cliente (busca parcial com strstr) */
 int lista_buscar_nome(const Lista *l, const char *nome) {
-    /* Busca sequencial (O(n)) — percorre toda a lista.
-     * Para cada nó, usa strstr() para verificar se o campo cliente
-     * contém o trecho buscado (busca parcial, case-sensitive).
-     * Imprime os encontrados e retorna a quantidade.
-     */
+    int encontrados = 0;
+    NoLista *atual = l->cabeca;
+
+    while (atual != NULL) {
+        /* strstr retorna não-nulo se encontrar o trecho dentro do nome */
+        if (strstr(atual->atendimento.cliente, nome) != NULL) {
+            if (encontrados == 0) imprimir_cabecalho();
+            imprimir_atendimento(&atual->atendimento);
+            encontrados++;
+        }
+        atual = atual->proximo;
+    }
+
+    if (encontrados == 0)
+        printf("  Nenhum resultado para \"%s\".\n", nome);
+    else
+        printf("  Encontrados: %d\n", encontrados);
+
+    return encontrados;
 }
 
+/* Busca todos os atendimentos com a prioridade informada */
 int lista_buscar_prioridade(const Lista *l, int prioridade) {
-    /* Busca sequencial (O(n)) — percorre toda a lista.
-     * Compara o campo prioridade de cada atendimento com o valor recebido.
-     * Imprime os encontrados e retorna a quantidade.
-     */
+    int encontrados = 0;
+    NoLista *atual = l->cabeca;
+
+    while (atual != NULL) {
+        if (atual->atendimento.prioridade == prioridade) {
+            if (encontrados == 0) imprimir_cabecalho();
+            imprimir_atendimento(&atual->atendimento);
+            encontrados++;
+        }
+        atual = atual->proximo;
+    }
+
+    if (encontrados == 0)
+        printf("  Nenhum atendimento com prioridade %s.\n", prioridade_label(prioridade));
+    else
+        printf("  Encontrados: %d\n", encontrados);
+
+    return encontrados;
 }
 
+/* Cancela o atendimento com o ID informado */
 int lista_cancelar(Lista *l, int id) {
-    /* 1. Percorre a lista até encontrar o ID
-     * 2. Se o status já for "atendido", imprime aviso e retorna 0
-     * 3. Se encontrado e não atendido, altera status para "cancelado" e retorna 1
-     * 4. Se o ID não existir na lista, retorna 0
-     */
+    NoLista *atual = l->cabeca;
+    while (atual != NULL) {
+        if (atual->atendimento.id == id) {
+            /* Não permite cancelar algo que já foi atendido */
+            if (strcmp(atual->atendimento.status, "atendido") == 0) {
+                printf("  Atendimento #%d ja foi atendido e nao pode ser cancelado.\n", id);
+                return 0;
+            }
+            strncpy(atual->atendimento.status, "cancelado", MAX_STATUS - 1);
+            return 1;
+        }
+        atual = atual->proximo;
+    }
+    return 0;
 }
 
+/* Atualiza o status de um atendimento pelo ID */
 int lista_atualizar_status(Lista *l, int id, const char *status) {
-    /* Percorre a lista até encontrar o nó com o ID informado.
-     * Atualiza o campo status com strncpy() usando o valor recebido.
-     * Retorna 1 se encontrou e atualizou, 0 caso contrário.
-     */
+    NoLista *atual = l->cabeca;
+    while (atual != NULL) {
+        if (atual->atendimento.id == id) {
+            strncpy(atual->atendimento.status, status, MAX_STATUS - 1);
+            return 1;
+        }
+        atual = atual->proximo;
+    }
+    return 0;
 }
 
+/* Libera toda a memória da lista */
 void lista_destruir(Lista *l) {
-    /* Percorre todos os nós liberando a memória de cada um,
-     * depois reinicializa a lista chamando lista_init()
-     */
+    NoLista *atual = l->cabeca;
+    while (atual != NULL) {
+        NoLista *proximo = atual->proximo;
+        free(atual);
+        atual = proximo;
+    }
+    lista_init(l);
 }
 
+/* Copia atendimentos da lista para um vetor (usado pela ordenação) */
 int lista_copiar_array(const Lista *l, Atendimento *arr, int max) {
-    /* Percorre a lista copiando cada atendimento para arr[i].
-     * Para quando chegar em NULL ou quando i atingir max.
-     * Retorna o número de elementos copiados.
-     * Usado por ordenacao.c para ordenar sem modificar a lista original.
-     */
+    int i = 0;
+    NoLista *atual = l->cabeca;
+    while (atual != NULL && i < max) {
+        arr[i] = atual->atendimento;
+        i++;
+        atual = atual->proximo;
+    }
+    return i;
 }
