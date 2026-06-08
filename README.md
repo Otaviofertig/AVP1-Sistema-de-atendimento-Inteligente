@@ -6,10 +6,10 @@ Projeto desenvolvido para a Avaliação Prática da Unidade Curricular **Estrutu
 
 ## Integrantes
 
-| Integrante | Responsabilidades |
-|------------|-------------------|
-| Integrante A | TAD Atendimento (`atendimento.h/c`), fila dinâmica (`fila.h/c`), menu principal (`main.c`) e testes básicos |
-| Integrante B | Lista encadeada (`lista.h/c`), ordenação (`ordenacao.h/c`), árvore binária (`arvore.h/c`), hash (`hash.h/c`) e estatísticas |
+| Integrante | Arquivos | Status |
+|------------|----------|--------|
+| Integrante A (Otávio) | `atendimento.h/c`, `fila.h/c`, `lista.h/c`, `main.c` | ✅ Implementado |
+| Integrante B | `arvore.h/c`, `hash.h/c`, `ordenacao.h/c` | 🔲 Pendente |
 
 ---
 

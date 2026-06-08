@@ -1,8 +1,16 @@
 /*
  * lista.c
- * Lista encadeada simples usada como histórico de atendimentos.
+ * RESPONSAVEL: Integrante A (Otávio)
+ *
+ * Lista encadeada simples usada como historico de atendimentos.
  * Guarda TODOS os atendimentos cadastrados (abertos, atendidos e cancelados).
- * Inserção sempre no início da lista (operação rápida).
+ * Cada no aponta para o proximo — nao tem tamanho fixo, cresce conforme necessario.
+ *
+ * Estrutura de um no:
+ *   [ Atendimento | *proximo ] --> [ Atendimento | *proximo ] --> NULL
+ *
+ * A cabeca da lista aponta para o primeiro no.
+ * Inserimos sempre no INICIO porque e O(1) — sem percorrer a lista toda.
  */
 
 #include <stdio.h>
@@ -16,19 +24,19 @@ void lista_init(Lista *l) {
     l->tamanho = 0;
 }
 
-/* Insere um atendimento no início da lista */
+/* Insere um atendimento no inicio da lista */
 int lista_inserir(Lista *l, Atendimento a) {
     NoLista *novo = (NoLista *)malloc(sizeof(NoLista));
     if (novo == NULL) return 0;
 
     novo->atendimento = a;
-    novo->proximo     = l->cabeca; /* o novo nó aponta para o antigo início */
-    l->cabeca         = novo;      /* o início agora é o novo nó */
+    novo->proximo     = l->cabeca;
+    l->cabeca         = novo;
     l->tamanho++;
     return 1;
 }
 
-/* Imprime todos os atendimentos do histórico */
+/* Imprime todos os atendimentos do historico */
 void lista_listar(const Lista *l) {
     if (l->cabeca == NULL) {
         printf("  Historico vazio.\n");
@@ -44,13 +52,12 @@ void lista_listar(const Lista *l) {
     printf("  Total: %d atendimento(s)\n", l->tamanho);
 }
 
-/* Busca por trecho do nome do cliente (busca parcial com strstr) */
+/* Busca parcial por nome do cliente usando strstr */
 int lista_buscar_nome(const Lista *l, const char *nome) {
     int encontrados = 0;
     NoLista *atual = l->cabeca;
 
     while (atual != NULL) {
-        /* strstr retorna não-nulo se encontrar o trecho dentro do nome */
         if (strstr(atual->atendimento.cliente, nome) != NULL) {
             if (encontrados == 0) imprimir_cabecalho();
             imprimir_atendimento(&atual->atendimento);
@@ -94,7 +101,6 @@ int lista_cancelar(Lista *l, int id) {
     NoLista *atual = l->cabeca;
     while (atual != NULL) {
         if (atual->atendimento.id == id) {
-            /* Não permite cancelar algo que já foi atendido */
             if (strcmp(atual->atendimento.status, "atendido") == 0) {
                 printf("  Atendimento #%d ja foi atendido e nao pode ser cancelado.\n", id);
                 return 0;
@@ -120,7 +126,7 @@ int lista_atualizar_status(Lista *l, int id, const char *status) {
     return 0;
 }
 
-/* Libera toda a memória da lista */
+/* Libera toda a memoria da lista */
 void lista_destruir(Lista *l) {
     NoLista *atual = l->cabeca;
     while (atual != NULL) {
@@ -131,7 +137,19 @@ void lista_destruir(Lista *l) {
     lista_init(l);
 }
 
-/* Calcula e exibe estatísticas do histórico — mantido aqui para respeitar o TAD */
+/* Copia atendimentos da lista para um vetor (usado pela ordenacao) */
+int lista_copiar_array(const Lista *l, Atendimento *arr, int max) {
+    int i = 0;
+    NoLista *atual = l->cabeca;
+    while (atual != NULL && i < max) {
+        arr[i] = atual->atendimento;
+        i++;
+        atual = atual->proximo;
+    }
+    return i;
+}
+
+/* Calcula e exibe estatisticas do historico */
 void lista_estatisticas(const Lista *l) {
     int total = 0, atendidos = 0, cancelados = 0, abertos = 0;
     int por_prioridade[4] = {0, 0, 0, 0};
@@ -162,16 +180,4 @@ void lista_estatisticas(const Lista *l) {
     if (total > 0)
         printf("  Tempo medio estimado  : %d min\n", tempo_total / total);
     printf("  ========================\n");
-}
-
-/* Copia atendimentos da lista para um vetor (usado pela ordenação) */
-int lista_copiar_array(const Lista *l, Atendimento *arr, int max) {
-    int i = 0;
-    NoLista *atual = l->cabeca;
-    while (atual != NULL && i < max) {
-        arr[i] = atual->atendimento;
-        i++;
-        atual = atual->proximo;
-    }
-    return i;
 }
