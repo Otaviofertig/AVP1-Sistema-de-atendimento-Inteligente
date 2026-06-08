@@ -106,6 +106,25 @@ projeto-estruturas-dados/
 
 ---
 
+## Justificativa Técnica das Estruturas
+
+### Fila Dinâmica (`fila.h/c`)
+**Por que fila?** O atendimento segue a ordem de chegada — quem chega primeiro, é atendido primeiro. Isso é exatamente o comportamento FIFO (First In, First Out) de uma fila. Alternativas como vetor fixo desperdiçariam memória ou exigiriam realocar todos os elementos ao remover o primeiro.
+
+### Lista Encadeada (`lista.h/c`)
+**Por que lista?** O histórico precisa crescer sem limite e nunca remove elementos do meio de forma frequente. A lista encadeada aloca cada nó sob demanda (`malloc`) e insere no início em tempo constante O(1). Um vetor exigiria realocar toda a memória ao crescer.
+
+### Árvore Binária de Busca (`arvore.h/c`)
+**Por que árvore?** Buscar um ID na lista exige percorrer nó por nó — custo O(n). Na árvore binária de busca, cada comparação elimina metade dos nós restantes, chegando ao resultado em O(log n) na média. A regra é: IDs menores ficam à esquerda, maiores à direita. A remoção trata três casos: nó folha, nó com um filho e nó com dois filhos (substituído pelo sucessor em-ordem).
+
+### Tabela Hash (`hash.h/c`)
+**Por que hash?** Agrupar atendimentos por categoria com uma lista seria O(n) por busca. A tabela hash aplica a função djb2 sobre o nome da categoria e calcula um índice direto no vetor de buckets — acesso médio O(1). Colisões são tratadas com encadeamento (lista ligada em cada bucket).
+
+### Algoritmo de Ordenação (`ordenacao.h/c`)
+**Por que Insertion Sort?** Para volumes pequenos e médios (até algumas centenas de registros), o Insertion Sort é simples, estável e eficiente na prática. Usa ponteiro de função (`cmp`) para reutilizar o mesmo algoritmo com critérios diferentes (prioridade ou tempo estimado).
+
+---
+
 ## Menu do Sistema
 
 ```

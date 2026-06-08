@@ -143,35 +143,7 @@ static void ordenar_historico(const Lista *historico, int criterio) {
 }
 
 static void exibir_estatisticas(const Lista *historico) {
-    int total = 0, atendidos = 0, cancelados = 0, abertos = 0;
-    int por_prioridade[4] = {0, 0, 0, 0}; // indices 1, 2, 3
-    int tempo_total = 0;
-
-    NoLista *atual = historico->cabeca;
-    while (atual) {
-        Atendimento *a = &atual->atendimento;
-        total++;
-        tempo_total += a->tempo_estimado;
-        if (strcmp(a->status, "atendido")  == 0) atendidos++;
-        else if (strcmp(a->status, "cancelado") == 0) cancelados++;
-        else abertos++;
-        if (a->prioridade >= 1 && a->prioridade <= 3)
-            por_prioridade[a->prioridade]++;
-        atual = atual->proximo;
-    }
-
-    printf("\n  ===== ESTATISTICAS =====\n");
-    printf("  Total de atendimentos : %d\n", total);
-    printf("  Abertos               : %d\n", abertos);
-    printf("  Atendidos             : %d\n", atendidos);
-    printf("  Cancelados            : %d\n", cancelados);
-    printf("  Por prioridade:\n");
-    printf("    Alta  (3): %d\n", por_prioridade[3]);
-    printf("    Media (2): %d\n", por_prioridade[2]);
-    printf("    Baixa (1): %d\n", por_prioridade[1]);
-    if (total > 0)
-        printf("  Tempo medio estimado  : %d min\n", tempo_total / total);
-    printf("  ========================\n");
+    lista_estatisticas(historico);
 }
 
 static void exibir_menu(void) {

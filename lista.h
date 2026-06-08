@@ -22,5 +22,6 @@ int  lista_cancelar(Lista *l, int id);
 int  lista_atualizar_status(Lista *l, int id, const char *status);
 void lista_destruir(Lista *l);
 int  lista_copiar_array(const Lista *l, Atendimento *arr, int max);
+void lista_estatisticas(const Lista *l);
 
 #endif
