@@ -9,7 +9,7 @@ Projeto desenvolvido para a Avaliação Prática da Unidade Curricular **Estrutu
 | Integrante | Arquivos | Status |
 |------------|----------|--------|
 | Integrante A (Otávio) | `atendimento.h/c`, `fila.h/c`, `lista.h/c`, `main.c` | ✅ Implementado |
-| Integrante B | `arvore.h/c`, `hash.h/c`, `ordenacao.h/c` | 🔲 Pendente |
+| Integrante B (Wesley)| `arvore.h/c`, `hash.h/c`, `ordenacao.h/c` | 🔲 Pendente |
 
 ---
 
