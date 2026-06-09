@@ -14,7 +14,7 @@ Unidade Curricular: **Estruturas de Dados | Linguagem C**
 | Integrante | Responsabilidades |
 |------------|-------------------|
 | Otávio Fertig | TAD Atendimento, Fila dinâmica, Lista encadeada, `main.c`, menu principal |
-| Integrante B | Árvore binária de busca, Tabela hash, Ordenação, Estatísticas |
+| Wesley | Árvore binária de busca, Tabela hash, Ordenação, Estatísticas |
 
 > A apresentação poderá conter perguntas para qualquer integrante sobre qualquer parte do projeto. Ambos devem compreender o sistema completo.
 
